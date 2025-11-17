@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MES Hospital Operations Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --mes-red: #c8102e;
+            --mes-light-red: #e74c3c;
+            --mes-white: #ffffff;
+            --mes-gray: #f5f5f5;
+            --mes-dark: #333333;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--mes-gray);
+            color: var(--mes-dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--mes-white);
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background-color: var(--mes-red);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--mes-white);
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .logo-text {
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .logo-text .main {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .logo-text .sub {
+            font-size: 0.8rem;
+        }
+        
+        .hospital-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--mes-red);
+        }
+        
+        .dashboard-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--mes-dark);
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background-color: var(--mes-white);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            flex: 1;
+            font-weight: 600;
+        }
+        
+        .tab.active {
+            background-color: var(--mes-red);
+            color: var(--mes-white);
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: rgba(200, 16, 46, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: var(--mes-white);
+            padding: 25px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--mes-red);
+            color: var(--mes-red);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--mes-red);
+            box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.2);
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            background-color: var(--mes-red);
+            color: var(--mes-white);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn:hover {
+            background-color: var(--mes-light-red);
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: var(--mes-white);
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-top: 4px solid var(--mes-red);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--mes-red);
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--mes-dark);
+        }
+        
+        .chart-container {
+            background-color: var(--mes-white);
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--mes-red);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .data-table th {
+            background-color: var(--mes-red);
+            color: var(--mes-white);
+            font-weight: 600;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            color: var(--mes-dark);
+            font-size: 0.9rem;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo-container {
+                margin-bottom: 15px;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-text">
+                            <div class="main">MES</div>
+                            <div class="sub">MEDICAL</div>
+                        </div>
+                    </div>
+                    <div class="hospital-name">MES AMS HOSPITAL</div>
+                </div>
+                <div class="dashboard-title">Operations Dashboard</div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="tab active" data-tab="data-entry">Data Entry</div>
+            <div class="tab" data-tab="daily-view">Daily View</div>
+            <div class="tab" data-tab="monthly-view">Monthly View</div>
+        </div>
+        
+        <!-- Data Entry Tab -->
+        <div class="tab-content active" id="data-entry">
+            <h2>Daily Operations Data Entry</h2>
+            <p>Enter the daily census data for the hospital operations.</p>
+            
+            <form id="data-entry-form">
+                <div class="form-section">
+                    <div class="section-title">Date Selection</div>
+                    <div class="form-group">
+                        <label for="entry-date">Date</label>
+                        <input type="date" id="entry-date" required>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-title">Overview</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="midnight-census">Midnight Census</label>
+                            <input type="number" id="midnight-census" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="previous-day">Previous Day</label>
+                            <input type="number" id="previous-day" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bed-occupancy">Bed Occupancy (%)</label>
+                            <input type="number" id="bed-occupancy" min="0" max="100" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="total-admission">Total Admission</label>
+                            <input type="number" id="total-admission" min="0" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-title">Outpatient Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="total-op">Total OP</label>
+                            <input type="number" id="total-op" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="ed">ED</label>
+                            <input type="number" id="ed" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="health-check">Health Check Up</label>
+                            <input type="number" id="health-check" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="daycare">Daycare</label>
+                            <input type="number" id="daycare" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-title">Emergency Room</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="er-patients-am">ER Patients (12AM-12PM)</label>
+                            <input type="number" id="er-patients-am" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="er-patients-pm">ER Patients (12PM-12AM)</label>
+                            <input type="number" id="er-patients-pm" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="er-admission-am">ER Admission (12AM-12PM)</label>
+                            <input type="number" id="er-admission-am" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="er-admission-pm">ER Admission (12PM-12AM)</label>
+                            <input type="number" id="er-admission-pm" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-title">Discharge Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="total-discharge">Total Discharge</label>
+                            <input type="number" id="total-discharge" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="normal-discharge">Normal Discharge</label>
+                            <input type="number" id="normal-discharge" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="delay-discharge">Delay Discharge Count (After 4 PM)</label>
+                            <input type="number" id="delay-discharge" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-title">Other Metrics</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="lama">LAMA</label>
+                            <input type="number" id="lama" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="dama">DAMA</label>
+                            <input type="number" id="dama" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="ambulance-visit">Ambulance Visit</label>
+                            <input type="number" id="ambulance-visit" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="refer-in">Refer In</label>
+                            <input type="number" id="refer-in" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="refer-out">Refer Out</label>
+                            <input type="number" id="refer-out" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="birth">Birth</label>
+                            <input type="number" id="birth" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="death">Death</label>
+                            <input type="number" id="death" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="brought-dead">Brought Dead</label>
+                            <input type="number" id="brought-dead" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="mlc">MLC</label>
+                            <input type="number" id="mlc" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="total-surgeries">Total Surgeries</label>
+                            <input type="number" id="total-surgeries" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="major-surgeries">Major Surgeries</label>
+                            <input type="number" id="major-surgeries" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="minor-surgeries">Minor Surgeries</label>
+                            <input type="number" id="minor-surgeries" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button type="submit" class="btn">Save Data</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Daily View Tab -->
+        <div class="tab-content" id="daily-view">
+            <h2>Daily Operations Overview</h2>
+            <p>View the daily operations data and trends.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Midnight Census</div>
+                    <div class="stat-value" id="stat-census">319</div>
+                    <div class="stat-label">Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Bed Occupancy</div>
+                    <div class="stat-value" id="stat-occupancy">38.3%</div>
+                    <div class="stat-label">Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Admission</div>
+                    <div class="stat-value" id="stat-admission">84</div>
+                    <div class="stat-label">Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Discharge</div>
+                    <div class="stat-value" id="stat-discharge">97</div>
+                    <div class="stat-label">Patients</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Daily Patient Flow</div>
+                <canvas id="daily-patient-chart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Department-wise Admissions</div>
+                <canvas id="department-admission-chart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Emergency Room Activity</div>
+                <canvas id="er-activity-chart"></canvas>
+            </div>
+            
+            <div class="section-title">Detailed Daily Data</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total OP</td>
+                        <td id="detail-total-op">826</td>
+                        <td>Health Check Up</td>
+                        <td id="detail-health-check">4</td>
+                    </tr>
+                    <tr>
+                        <td>ED</td>
+                        <td id="detail-ed">67</td>
+                        <td>Daycare</td>
+                        <td id="detail-daycare">60</td>
+                    </tr>
+                    <tr>
+                        <td>LAMA</td>
+                        <td id="detail-lama">5</td>
+                        <td>DAMA</td>
+                        <td id="detail-dama">0</td>
+                    </tr>
+                    <tr>
+                        <td>Refer In</td>
+                        <td id="detail-refer-in">17</td>
+                        <td>Refer Out</td>
+                        <td id="detail-refer-out">0</td>
+                    </tr>
+                    <tr>
+                        <td>Birth</td>
+                        <td id="detail-birth">4</td>
+                        <td>Death</td>
+                        <td id="detail-death">2</td>
+                    </tr>
+                    <tr>
+                        <td>Brought Dead</td>
+                        <td id="detail-brought-dead">1</td>
+                        <td>MLC</td>
+                        <td id="detail-mlc">7</td>
+                    </tr>
+                    <tr>
+                        <td>Total Surgeries</td>
+                        <td id="detail-total-surgeries">25</td>
+                        <td>Major Surgeries</td>
+                        <td id="detail-major-surgeries">23</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Monthly View Tab -->
+        <div class="tab-content" id="monthly-view">
+            <h2>Monthly Operations Overview</h2>
+            <p>View the monthly trends and performance metrics.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Average Daily Census</div>
+                    <div class="stat-value" id="monthly-avg-census">325</div>
+                    <div class="stat-label">Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Bed Occupancy</div>
+                    <div class="stat-value" id="monthly-avg-occupancy">36.8%</div>
+                    <div class="stat-label">Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Monthly Admissions</div>
+                    <div class="stat-value" id="monthly-total-admission">749</div>
+                    <div class="stat-label">Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Monthly Discharges</div>
+                    <div class="stat-value" id="monthly-total-discharge">677</div>
+                    <div class="stat-label">Patients</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Monthly Patient Flow Trend</div>
+                <canvas id="monthly-trend-chart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Monthly Department Performance</div>
+                <canvas id="monthly-department-chart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Surgery Statistics</div>
+                <canvas id="surgery-stats-chart"></canvas>
+            </div>
+            
+            <div class="section-title">Monthly Summary Data</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Total</th>
+                        <th>Average Per Day</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total OP</td>
+                        <td id="monthly-total-op">6,533</td>
+                        <td id="monthly-avg-op">933</td>
+                    </tr>
+                    <tr>
+                        <td>ED Visits</td>
+                        <td id="monthly-total-ed">467</td>
+                        <td id="monthly-avg-ed">67</td>
+                    </tr>
+                    <tr>
+                        <td>LAMA</td>
+                        <td id="monthly-total-lama">37</td>
+                        <td id="monthly-avg-lama">5.3</td>
+                    </tr>
+                    <tr>
+                        <td>DAMA</td>
+                        <td id="monthly-total-dama">16</td>
+                        <td id="monthly-avg-dama">2.3</td>
+                    </tr>
+                    <tr>
+                        <td>Refer In</td>
+                        <td id="monthly-total-refer-in">63</td>
+                        <td id="monthly-avg-refer-in">9</td>
+                    </tr>
+                    <tr>
+                        <td>Refer Out</td>
+                        <td id="monthly-total-refer-out">7</td>
+                        <td id="monthly-avg-refer-out">1</td>
+                    </tr>
+                    <tr>
+                        <td>Births</td>
+                        <td id="monthly-total-birth">20</td>
+                        <td id="monthly-avg-birth">2.9</td>
+                    </tr>
+                    <tr>
+                        <td>Deaths</td>
+                        <td id="monthly-total-death">15</td>
+                        <td id="monthly-avg-death">2.1</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>MES AMS Hospital Operations Dashboard &copy; 2025</p>
+            <p>For authorized personnel only</p>
+        </div>
+    </footer>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // Form submission
+        document.getElementById('data-entry-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Data saved successfully!');
+            // In a real application, you would send this data to a server
+        });
+        
+        // Sample data for charts (in a real app, this would come from a database)
+        const dailyData = {
+            dates: ['1 Nov', '2 Nov', '3 Nov', '4 Nov', '5 Nov', '6 Nov', '7 Nov'],
+            admissions: [84, 45, 107, 101, 108, 103, 78],
+            discharges: [97, 33, 116, 86, 95, 109, 99],
+            erPatients: [67, 75, 51, 62, 56, 56, 48]
+        };
+        
+        const departmentData = {
+            labels: ['MICU', 'CCU', 'SICU', 'PICU', 'NNICU', 'Wards', 'Rooms'],
+            admissions: [12, 7, 3, 2, 10, 150, 59]
+        };
+        
+        const monthlyData = {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            census: [325, 335, 340, 315],
+            occupancy: [36.5, 37.2, 38.1, 35.8],
+            surgeries: [120, 135, 142, 128]
+        };
+        
+        // Initialize charts
+        window.onload = function() {
+            // Daily Patient Flow Chart
+            const dailyPatientCtx = document.getElementById('daily-patient-chart').getContext('2d');
+            new Chart(dailyPatientCtx, {
+                type: 'line',
+                data: {
+                    labels: dailyData.dates,
+                    datasets: [
+                        {
+                            label: 'Admissions',
+                            data: dailyData.admissions,
+                            borderColor: '#c8102e',
+                            backgroundColor: 'rgba(200, 16, 46, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Discharges',
+                            data: dailyData.discharges,
+                            borderColor: '#333333',
+                            backgroundColor: 'rgba(51, 51, 51, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Daily Patient Flow'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Patients'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Department Admission Chart
+            const departmentAdmissionCtx = document.getElementById('department-admission-chart').getContext('2d');
+            new Chart(departmentAdmissionCtx, {
+                type: 'bar',
+                data: {
+                    labels: departmentData.labels,
+                    datasets: [{
+                        label: 'Admissions',
+                        data: departmentData.admissions,
+                        backgroundColor: [
+                            'rgba(200, 16, 46, 0.7)',
+                            'rgba(200, 16, 46, 0.6)',
+                            'rgba(200, 16, 46, 0.5)',
+                            'rgba(200, 16, 46, 0.4)',
+                            'rgba(200, 16, 46, 0.3)',
+                            'rgba(200, 16, 46, 0.2)',
+                            'rgba(200, 16, 46, 0.1)'
+                        ],
+                        borderColor: [
+                            'rgb(200, 16, 46)',
+                            'rgb(200, 16, 46)',
+                            'rgb(200, 16, 46)',
+                            'rgb(200, 16, 46)',
+                            'rgb(200, 16, 46)',
+                            'rgb(200, 16, 46)',
+                            'rgb(200, 16, 46)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Department-wise Admissions'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Patients'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // ER Activity Chart
+            const erActivityCtx = document.getElementById('er-activity-chart').getContext('2d');
+            new Chart(erActivityCtx, {
+                type: 'bar',
+                data: {
+                    labels: dailyData.dates,
+                    datasets: [{
+                        label: 'ER Patients',
+                        data: dailyData.erPatients,
+                        backgroundColor: 'rgba(200, 16, 46, 0.7)',
+                        borderColor: 'rgb(200, 16, 46)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Emergency Room Activity'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Patients'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Monthly Trend Chart
+            const monthlyTrendCtx = document.getElementById('monthly-trend-chart').getContext('2d');
+            new Chart(monthlyTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.labels,
+                    datasets: [
+                        {
+                            label: 'Average Census',
+                            data: monthlyData.census,
+                            borderColor: '#c8102e',
+                            backgroundColor: 'rgba(200, 16, 46, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Bed Occupancy %',
+                            data: monthlyData.occupancy,
+                            borderColor: '#333333',
+                            backgroundColor: 'rgba(51, 51, 51, 0.1)',
+                            tension: 0.3,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Monthly Patient Flow Trend'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Average Census'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Bed Occupancy %'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+            
+            // Surgery Stats Chart
+            const surgeryStatsCtx = document.getElementById('surgery-stats-chart').getContext('2d');
+            new Chart(surgeryStatsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Major Surgeries', 'Minor Surgeries'],
+                    datasets: [{
+                        data: [175, 52],
+                        backgroundColor: [
+                            'rgba(200, 16, 46, 0.7)',
+                            'rgba(200, 16, 46, 0.3)'
+                        ],
+                        borderColor: [
+                            'rgb(200, 16, 46)',
+                            'rgb(200, 16, 46)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Surgery Statistics (Monthly)'
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>
